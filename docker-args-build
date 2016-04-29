@@ -3,17 +3,21 @@
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_CORE_AVAILABLE_PATH/common/functions"
 
-local APP="$1"
-local IMAGE_SOURCE_TYPE="$2"
-local STDIN=$(cat)
-local output=""
+git_rev_docker_args_build() {
+  local APP="$1"
+  local IMAGE_SOURCE_TYPE="$2"
+  local STDIN=$(cat)
+  local output=""
 
-# Ensure the .dokku-git-rev file actually exists
-if test ! -f "$DOKKU_ROOT/$APP/.dokku-git-rev"; then
-  # Grab the REV
-  local GIT_REV=$(tail -1 "$DOKKU_ROOT/$APP/.dokku-git-rev")
-  local output="$output --build-arg GIT_REV=$GIT_REV"
-  dokku_log_info1 "Adding GIT_REV ($GIT_REV) to build environment..."
-fi
+  # Ensure the .dokku-git-rev file actually exists
+  if test ! -f "$DOKKU_ROOT/$APP/.dokku-git-rev"; then
+    # Grab the REV
+    local GIT_REV=$(tail -1 "$DOKKU_ROOT/$APP/.dokku-git-rev")
+    local output="$output --build-arg GIT_REV=$GIT_REV"
+    dokku_log_info1 "Adding GIT_REV ($GIT_REV) to build environment..."
+  fi
 
-echo -n "$STDIN$output"
+  echo -n "$STDIN$output"
+}
+
+git_rev_docker_args_build "$@"
