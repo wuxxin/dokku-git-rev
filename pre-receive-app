@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 
-APP="$1"; REV="$4"
+APP="$1"; WORK_DIR="$3"; REV="$4"
 
 # Don't write the revision if there is no git repository.
 if [[ ! -d "$DOKKU_ROOT/$APP/refs" ]]; then
+  # delete possible existing .dokku-git-* because something changed
+  for a in rev branch; do
+    if test -e "$DOKKU_ROOT/$APP/.dokku-git-$a"; then
+      rm "$DOKKU_ROOT/$APP/.dokku-git-$a"
+    fi
+  done
   true
 else
-  # Ensure there's a directory for the app
-  if [[ ! -d "$DOKKU_ROOT/$APP" ]]; then
-    mkdir -p "$DOKKU_ROOT/$APP"
-  fi
-
-  # Save the REV to a file called .dokku-git-rev to
+  pushd "$DOKKU_ROOT/$APP"
+  BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  popd
+  # Save the REV, BRANCH to files called .dokku-git-rev/branch
   echo $REV > "$DOKKU_ROOT/$APP/.dokku-git-rev"
+  echo $BRANCH > "$DOKKU_ROOT/$APP/.dokku-git-branch"
 fi
